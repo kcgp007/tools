@@ -9,6 +9,6 @@ import (
 
 func init() {
 	if err := sequences.EnableVirtualTerminalProcessing(syscall.Stdout, true); err != nil {
-		color.NoColor = false
+		color.NoColor = true
 	}
 }

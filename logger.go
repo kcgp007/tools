@@ -16,9 +16,8 @@ import (
 )
 
 func init() {
-	myFormatter := new(MyFormatter)
 	// 配置输出格式
-	logrus.SetFormatter(myFormatter)
+	logrus.SetFormatter(&MyFormatter{true})
 	switch strings.ToLower(Log.Level) {
 	case "panic", "p":
 		logrus.SetLevel(logrus.PanicLevel)
@@ -59,24 +58,26 @@ func init() {
 		logrus.ErrorLevel: writer,
 		logrus.FatalLevel: writer,
 		logrus.PanicLevel: writer,
-	}, myFormatter)
+	}, &MyFormatter{false})
 	logrus.AddHook(hook)
 }
 
-type MyFormatter struct{}
+type MyFormatter struct {
+	isColor bool
+}
 
 // 根据不同log类型使用不同的输出样式
-func (_ *MyFormatter) Format(entry *logrus.Entry) ([]byte, error) {
+func (f *MyFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	msg := entry.Message
 	switch entry.Level {
 	case logrus.TraceLevel:
-		msg = fmt.Sprintln(timeText(entry), levelText(entry), ":", msg)
+		msg = fmt.Sprintln(timeText(entry), f.levelText(entry), ":", msg)
 	case logrus.DebugLevel:
-		msg = fmt.Sprintln(timeText(entry), levelText(entry), fileText(entry), ":", msg)
+		msg = fmt.Sprintln(timeText(entry), f.levelText(entry), fileText(entry), ":", msg)
 	case logrus.InfoLevel, logrus.WarnLevel:
-		msg = fmt.Sprintln(timeText(entry), levelText(entry), functionText(entry), ":", msg)
+		msg = fmt.Sprintln(timeText(entry), f.levelText(entry), functionText(entry), ":", msg)
 	case logrus.ErrorLevel, logrus.FatalLevel, logrus.PanicLevel:
-		msg = fmt.Sprintln(timeText(entry), levelText(entry), fileText(entry), functionText(entry), ":", msg)
+		msg = fmt.Sprintln(timeText(entry), f.levelText(entry), fileText(entry), functionText(entry), ":", msg)
 	}
 	return []byte(msg), nil
 }
@@ -87,16 +88,22 @@ func timeText(entry *logrus.Entry) string {
 }
 
 // 日志等级
-func levelText(entry *logrus.Entry) string {
+func (f *MyFormatter) levelText(entry *logrus.Entry) string {
+	c := color.New()
+	if f.isColor {
+		c.EnableColor()
+	} else {
+		c.DisableColor()
+	}
 	switch entry.Level {
 	case logrus.InfoLevel:
-		return color.New(color.FgBlue).Sprint(strings.ToUpper(entry.Level.String()))
+		return c.Add(color.FgBlue).Sprint(strings.ToUpper(entry.Level.String()))
 	case logrus.DebugLevel, logrus.TraceLevel:
-		return color.New(color.FgGreen).Sprint(strings.ToUpper(entry.Level.String()))
+		return c.Add(color.FgGreen).Sprint(strings.ToUpper(entry.Level.String()))
 	case logrus.WarnLevel:
-		return color.New(color.FgYellow).Sprint(strings.ToUpper(entry.Level.String()))
+		return c.Add(color.FgYellow).Sprint(strings.ToUpper(entry.Level.String()))
 	case logrus.ErrorLevel, logrus.FatalLevel, logrus.PanicLevel:
-		return color.New(color.FgRed).Sprint(strings.ToUpper(entry.Level.String()))
+		return c.Add(color.FgRed).Sprint(strings.ToUpper(entry.Level.String()))
 	default:
 		return strings.ToUpper(entry.Level.String())
 	}
