@@ -2,32 +2,13 @@ package ginTool
 
 import (
 	"net/http"
-	"os"
-	"os/exec"
-	"path/filepath"
 	"strconv"
 	"time"
 
 	"github.com/fatih/color"
-	"github.com/sirupsen/logrus"
-
 	"github.com/gin-gonic/gin"
-	ginSwagger "github.com/swaggo/gin-swagger"
-	"github.com/swaggo/gin-swagger/swaggerFiles"
-	"github.com/swaggo/swag/example/basic/docs"
+	"github.com/sirupsen/logrus"
 )
-
-// swagger配置
-func SwaggerConfig(router *gin.Engine) {
-	if gin.Mode() == "debug" {
-		appName, _ := exec.LookPath(os.Args[0])
-		ext := filepath.Ext(appName)
-		appName = filepath.Base(appName)
-		appName = appName[:len(appName)-len(ext)]
-		docs.SwaggerInfo.Title = appName + " Swagger API"
-		router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	}
-}
 
 // 访问日志
 func WebLog(c *gin.Context) {
