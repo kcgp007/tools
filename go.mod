@@ -10,10 +10,11 @@ require (
 	github.com/konsorten/go-windows-terminal-sequences v1.0.3
 	github.com/lestrrat-go/file-rotatelogs v2.4.0+incompatible
 	github.com/lestrrat-go/strftime v1.0.4 // indirect
+	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/rifflock/lfshook v0.0.0-20180920164130-b9218ef580f5
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.8.0
-	github.com/swaggo/gin-swagger v1.3.0
-	github.com/swaggo/swag v1.7.0
+	github.com/ugorji/go v1.1.13 // indirect
+	gorm.io/gorm v1.21.11
 )

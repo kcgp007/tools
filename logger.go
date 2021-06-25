@@ -2,12 +2,10 @@ package tools
 
 import (
 	"fmt"
-	"os"
-	"os/exec"
 	"path"
-	"path/filepath"
 	"strings"
 	"time"
+	"tools/appName"
 
 	"github.com/fatih/color"
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
@@ -38,11 +36,7 @@ func init() {
 	}
 	logrus.SetReportCaller(true)
 	// 获取配置文件中的日志文件路径
-	appName, _ := exec.LookPath(os.Args[0])
-	ext := filepath.Ext(appName)
-	appName = filepath.Base(appName)
-	appName = appName[:len(appName)-len(ext)]
-	logPath := path.Join(Log.Dir, appName)
+	logPath := path.Join(Log.Dir, appName.Get())
 	writer, err := rotatelogs.New(logPath+"_%Y%m%d.log",
 		rotatelogs.WithLinkName(logPath+"_link"),
 		rotatelogs.WithMaxAge(time.Duration(Log.MaxAge*24)*time.Hour),
