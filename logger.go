@@ -84,7 +84,7 @@ func timeText(entry *logrus.Entry) string {
 // 日志等级
 func (f *MyFormatter) levelText(entry *logrus.Entry) string {
 	c := color.New()
-	if f.isColor {
+	if f.isColor && !color.NoColor {
 		c.EnableColor()
 	} else {
 		c.DisableColor()
