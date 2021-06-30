@@ -1,6 +1,7 @@
 package tools
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -8,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/fsnotify/fsnotify"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
@@ -31,16 +31,29 @@ func init() {
 
 // 添加配置
 func AddConfig(p interface{}) {
-	setDefault(p)
 	if err := viper.ReadInConfig(); err != nil {
-		logrus.Warn(err)
+		fmt.Println(err)
+		setDefault(p)
 		viper.WriteConfigAs(*configPath + "/config.yml")
 	} else {
-		viper.WriteConfig()
+		isSet(p)
 	}
 	read(p)(*new(fsnotify.Event))
 	viper.WatchConfig()
 	viper.OnConfigChange(read(p))
+}
+
+// 配置是否完整，不完整重新写入默认值
+func isSet(p interface{}) {
+	v := reflect.ValueOf(p).Elem()
+	for i := 0; i < v.NumField(); i++ {
+		typeField := v.Type().Field(i)
+		if !viper.IsSet(v.Type().Name() + "." + typeField.Tag.Get("config")) {
+			setDefault(p)
+			viper.WriteConfig()
+			return
+		}
+	}
 }
 
 // 设置配置默认值
@@ -49,6 +62,9 @@ func setDefault(p interface{}) {
 	for i := 0; i < v.NumField(); i++ {
 		field := v.Field(i)
 		typeField := v.Type().Field(i)
+		if !viper.IsSet(v.Type().Name() + "." + typeField.Tag.Get("config")) {
+
+		}
 		switch typeField.Type.Kind() {
 		case reflect.String:
 			viper.SetDefault(v.Type().Name()+"."+typeField.Tag.Get("config"), typeField.Tag.Get("default"))
