@@ -92,8 +92,10 @@ func (f *MyFormatter) levelText(entry *logrus.Entry) string {
 	switch entry.Level {
 	case logrus.InfoLevel:
 		return c.Add(color.FgBlue).Sprint(strings.ToUpper(entry.Level.String()))
-	case logrus.DebugLevel, logrus.TraceLevel:
+	case logrus.DebugLevel:
 		return c.Add(color.FgGreen).Sprint(strings.ToUpper(entry.Level.String()))
+	case logrus.TraceLevel:
+		return c.Add(color.FgCyan).Sprint(strings.ToUpper(entry.Level.String()))
 	case logrus.WarnLevel:
 		return c.Add(color.FgYellow).Sprint(strings.ToUpper(entry.Level.String()))
 	case logrus.ErrorLevel, logrus.FatalLevel, logrus.PanicLevel:
