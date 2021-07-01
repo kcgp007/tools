@@ -57,7 +57,7 @@ func isSet(p interface{}) {
 	v := reflect.ValueOf(p).Elem()
 	for i := 0; i < v.NumField(); i++ {
 		typeField := v.Type().Field(i)
-		if !viper.IsSet(v.Type().Name() + "." + typeField.Tag.Get("config")) {
+		if !viper.IsSet(genKey(v.Type().Name(), typeField.Name)) {
 			setDefault(p)
 			viper.WriteConfig()
 			return
