@@ -27,6 +27,7 @@ var Log log
 var configPath = pflag.StringP("configPath", "c", ".", "配置文件路径")
 
 func init() {
+	pflag.Parse()
 	viper.SetConfigName("config")
 	viper.AddConfigPath(*configPath)
 	if err := viper.ReadInConfig(); err != nil {
