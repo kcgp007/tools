@@ -19,7 +19,7 @@ var ps []interface{}
 type log struct {
 	Level  string `default:"info"`
 	MaxAge int    `default:"30"`
-	Dir    string `default:"log" isDir:""`
+	Dir    string `default:"log"`
 }
 
 var Log log
@@ -107,8 +107,7 @@ func read(p interface{}) {
 		typeField := v.Type().Field(i)
 		switch typeField.Type.Kind() {
 		case reflect.String:
-			_, isDir := typeField.Tag.Lookup("isDir")
-			if isDir {
+			if strings.Contains(strings.ToLower(typeField.Name), "dir") {
 				field.SetString(createDir(viper.GetString(genKey(v.Type().Name(), typeField.Name))))
 			} else {
 				field.SetString(viper.GetString(genKey(v.Type().Name(), typeField.Name)))
