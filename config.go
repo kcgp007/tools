@@ -13,6 +13,8 @@ import (
 	"github.com/spf13/viper"
 )
 
+var ps []interface{}
+
 type log struct {
 	Level  string `config:"level" default:"info"`
 	MaxAge int    `config:"max_age" default:"30"`
@@ -26,24 +28,29 @@ var configPath = pflag.StringP("configPath", "c", ".", "配置文件路径")
 func init() {
 	viper.SetConfigName("config")
 	viper.AddConfigPath(*configPath)
+	if err := viper.ReadInConfig(); err != nil {
+		fmt.Println(err)
+		viper.WriteConfigAs(*configPath + "/config.yml")
+	}
+	viper.WatchConfig()
+	viper.OnConfigChange(func(_ fsnotify.Event) {
+		for _, p := range ps {
+			go read(p)
+		}
+	})
 	AddConfig(&Log)
 }
 
 // 添加配置
-func AddConfig(p interface{}) {
-	if err := viper.ReadInConfig(); err != nil {
-		fmt.Println(err)
-		setDefault(p)
-		viper.WriteConfigAs(*configPath + "/config.yml")
-	} else {
+func AddConfig(p ...interface{}) {
+	for _, p := range p {
 		isSet(p)
+		read(p)
 	}
-	read(p)(*new(fsnotify.Event))
-	viper.WatchConfig()
-	viper.OnConfigChange(read(p))
+	ps = append(ps, p...)
 }
 
-// 配置是否完整，不完整重新写入默认值
+// 配置是否完整，不完整补充写入默认值
 func isSet(p interface{}) {
 	v := reflect.ValueOf(p).Elem()
 	for i := 0; i < v.NumField(); i++ {
@@ -62,9 +69,6 @@ func setDefault(p interface{}) {
 	for i := 0; i < v.NumField(); i++ {
 		field := v.Field(i)
 		typeField := v.Type().Field(i)
-		if !viper.IsSet(v.Type().Name() + "." + typeField.Tag.Get("config")) {
-
-		}
 		switch typeField.Type.Kind() {
 		case reflect.String:
 			viper.SetDefault(v.Type().Name()+"."+typeField.Tag.Get("config"), typeField.Tag.Get("default"))
@@ -95,33 +99,31 @@ func setDefault(p interface{}) {
 }
 
 // 读取配置
-func read(p interface{}) func(_ fsnotify.Event) {
-	return func(_ fsnotify.Event) {
-		v := reflect.ValueOf(p).Elem()
-		for i := 0; i < v.NumField(); i++ {
-			field := v.Field(i)
-			typeField := v.Type().Field(i)
-			switch typeField.Type.Kind() {
+func read(p interface{}) {
+	v := reflect.ValueOf(p).Elem()
+	for i := 0; i < v.NumField(); i++ {
+		field := v.Field(i)
+		typeField := v.Type().Field(i)
+		switch typeField.Type.Kind() {
+		case reflect.String:
+			_, isDir := typeField.Tag.Lookup("isDir")
+			if isDir {
+				field.SetString(createDir(viper.GetString(v.Type().Name() + "." + typeField.Tag.Get("config"))))
+			} else {
+				field.SetString(viper.GetString(v.Type().Name() + "." + typeField.Tag.Get("config")))
+			}
+		case reflect.Int:
+			field.SetInt(viper.GetInt64(v.Type().Name() + "." + typeField.Tag.Get("config")))
+		case reflect.Float64:
+			field.SetFloat(viper.GetFloat64(v.Type().Name() + "." + typeField.Tag.Get("config")))
+		case reflect.Bool:
+			field.SetBool(viper.GetBool(v.Type().Name() + "." + typeField.Tag.Get("config")))
+		case reflect.Slice:
+			switch reflect.New(field.Type().Elem()).Elem().Type().Kind() {
 			case reflect.String:
-				_, isDir := typeField.Tag.Lookup("isDir")
-				if isDir {
-					field.SetString(createDir(viper.GetString(v.Type().Name() + "." + typeField.Tag.Get("config"))))
-				} else {
-					field.SetString(viper.GetString(v.Type().Name() + "." + typeField.Tag.Get("config")))
-				}
+				field.Set(reflect.ValueOf(viper.GetStringSlice(v.Type().Name() + "." + typeField.Tag.Get("config"))))
 			case reflect.Int:
-				field.SetInt(viper.GetInt64(v.Type().Name() + "." + typeField.Tag.Get("config")))
-			case reflect.Float64:
-				field.SetFloat(viper.GetFloat64(v.Type().Name() + "." + typeField.Tag.Get("config")))
-			case reflect.Bool:
-				field.SetBool(viper.GetBool(v.Type().Name() + "." + typeField.Tag.Get("config")))
-			case reflect.Slice:
-				switch reflect.New(field.Type().Elem()).Elem().Type().Kind() {
-				case reflect.String:
-					field.Set(reflect.ValueOf(viper.GetStringSlice(v.Type().Name() + "." + typeField.Tag.Get("config"))))
-				case reflect.Int:
-					field.Set(reflect.ValueOf(viper.GetIntSlice(v.Type().Name() + "." + typeField.Tag.Get("config"))))
-				}
+				field.Set(reflect.ValueOf(viper.GetIntSlice(v.Type().Name() + "." + typeField.Tag.Get("config"))))
 			}
 		}
 	}
