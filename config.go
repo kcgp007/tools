@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"unicode"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/pflag"
@@ -16,9 +17,9 @@ import (
 var ps []interface{}
 
 type log struct {
-	Level  string `config:"level" default:"info"`
-	MaxAge int    `config:"max_age" default:"30"`
-	Dir    string `config:"dir" default:"log" isDir:""`
+	Level  string `default:"info"`
+	MaxAge int    `default:"30"`
+	Dir    string `default:"log" isDir:""`
 }
 
 var Log log
@@ -71,28 +72,28 @@ func setDefault(p interface{}) {
 		typeField := v.Type().Field(i)
 		switch typeField.Type.Kind() {
 		case reflect.String:
-			viper.SetDefault(v.Type().Name()+"."+typeField.Tag.Get("config"), typeField.Tag.Get("default"))
+			viper.SetDefault(genKey(v.Type().Name(), typeField.Name), typeField.Tag.Get("default"))
 		case reflect.Int:
 			i, _ := strconv.Atoi(typeField.Tag.Get("default"))
-			viper.SetDefault(v.Type().Name()+"."+typeField.Tag.Get("config"), i)
+			viper.SetDefault(genKey(v.Type().Name(), typeField.Name), i)
 		case reflect.Float64:
 			f, _ := strconv.ParseFloat(typeField.Tag.Get("default"), 64)
-			viper.SetDefault(v.Type().Name()+"."+typeField.Tag.Get("config"), f)
+			viper.SetDefault(genKey(v.Type().Name(), typeField.Name), f)
 		case reflect.Bool:
 			b, _ := strconv.ParseBool(typeField.Tag.Get("default"))
-			viper.SetDefault(v.Type().Name()+"."+typeField.Tag.Get("config"), b)
+			viper.SetDefault(genKey(v.Type().Name(), typeField.Name), b)
 		case reflect.Slice:
 			switch reflect.New(field.Type().Elem()).Elem().Type().Kind() {
 			case reflect.String:
 				ss := strings.Split(typeField.Tag.Get("default"), ",")
-				viper.SetDefault(v.Type().Name()+"."+typeField.Tag.Get("config"), ss)
+				viper.SetDefault(genKey(v.Type().Name(), typeField.Name), ss)
 			case reflect.Int:
 				ss := strings.Split(typeField.Tag.Get("default"), ",")
 				is := make([]int, len(ss))
 				for i, s := range ss {
 					is[i], _ = strconv.Atoi(s)
 				}
-				viper.SetDefault(v.Type().Name()+"."+typeField.Tag.Get("config"), is)
+				viper.SetDefault(genKey(v.Type().Name(), typeField.Name), is)
 			}
 		}
 	}
@@ -108,22 +109,22 @@ func read(p interface{}) {
 		case reflect.String:
 			_, isDir := typeField.Tag.Lookup("isDir")
 			if isDir {
-				field.SetString(createDir(viper.GetString(v.Type().Name() + "." + typeField.Tag.Get("config"))))
+				field.SetString(createDir(viper.GetString(genKey(v.Type().Name(), typeField.Name))))
 			} else {
-				field.SetString(viper.GetString(v.Type().Name() + "." + typeField.Tag.Get("config")))
+				field.SetString(viper.GetString(genKey(v.Type().Name(), typeField.Name)))
 			}
 		case reflect.Int:
-			field.SetInt(viper.GetInt64(v.Type().Name() + "." + typeField.Tag.Get("config")))
+			field.SetInt(viper.GetInt64(genKey(v.Type().Name(), typeField.Name)))
 		case reflect.Float64:
-			field.SetFloat(viper.GetFloat64(v.Type().Name() + "." + typeField.Tag.Get("config")))
+			field.SetFloat(viper.GetFloat64(genKey(v.Type().Name(), typeField.Name)))
 		case reflect.Bool:
-			field.SetBool(viper.GetBool(v.Type().Name() + "." + typeField.Tag.Get("config")))
+			field.SetBool(viper.GetBool(genKey(v.Type().Name(), typeField.Name)))
 		case reflect.Slice:
 			switch reflect.New(field.Type().Elem()).Elem().Type().Kind() {
 			case reflect.String:
-				field.Set(reflect.ValueOf(viper.GetStringSlice(v.Type().Name() + "." + typeField.Tag.Get("config"))))
+				field.Set(reflect.ValueOf(viper.GetStringSlice(genKey(v.Type().Name(), typeField.Name))))
 			case reflect.Int:
-				field.Set(reflect.ValueOf(viper.GetIntSlice(v.Type().Name() + "." + typeField.Tag.Get("config"))))
+				field.Set(reflect.ValueOf(viper.GetIntSlice(genKey(v.Type().Name(), typeField.Name))))
 			}
 		}
 	}
@@ -136,4 +137,29 @@ func createDir(path string) string {
 		os.Mkdir(path, os.ModePerm)
 	}
 	return path
+}
+
+// 生成 key
+func genKey(ss ...string) string {
+	key := ""
+	for _, s := range ss {
+		key += "." + cc2sc(s)
+	}
+	return key[1:]
+}
+
+// 驼峰(CamelCase)转蛇形(snake_case)
+func cc2sc(s string) string {
+	var out []rune
+	for i, r := range s {
+		if i == 0 {
+			out = append(out, unicode.ToLower(r))
+		} else {
+			if unicode.IsUpper(r) {
+				out = append(out, '_')
+			}
+			out = append(out, unicode.ToLower(r))
+		}
+	}
+	return string(out)
 }
