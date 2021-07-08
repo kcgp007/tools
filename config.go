@@ -7,7 +7,10 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 	"unicode"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/pflag"
@@ -61,7 +64,7 @@ func read(p interface{}) {
 		key := genKey(v.Type().Name(), typeField.Name)
 		switch typeField.Type.Kind() {
 		case reflect.String:
-			if !viper.IsSet(key) {
+			if !viper.InConfig(cc2sc(v.Type().Name())) || !viper.Sub(cc2sc(v.Type().Name())).InConfig(cc2sc(typeField.Name)) {
 				isWrite = true
 				viper.SetDefault(key, typeField.Tag.Get("default"))
 			}
@@ -70,21 +73,21 @@ func read(p interface{}) {
 			}
 			field.SetString(viper.GetString(key))
 		case reflect.Int:
-			if !viper.IsSet(key) {
+			if !viper.InConfig(cc2sc(v.Type().Name())) || !viper.Sub(cc2sc(v.Type().Name())).InConfig(cc2sc(typeField.Name)) {
 				isWrite = true
 				i, _ := strconv.Atoi(typeField.Tag.Get("default"))
 				viper.SetDefault(key, i)
 			}
 			field.SetInt(viper.GetInt64(key))
 		case reflect.Float64:
-			if !viper.IsSet(key) {
+			if !viper.InConfig(cc2sc(v.Type().Name())) || !viper.Sub(cc2sc(v.Type().Name())).InConfig(cc2sc(typeField.Name)) {
 				isWrite = true
 				f, _ := strconv.ParseFloat(typeField.Tag.Get("default"), 64)
 				viper.SetDefault(key, f)
 			}
 			field.SetFloat(viper.GetFloat64(key))
 		case reflect.Bool:
-			if !viper.IsSet(key) {
+			if !viper.InConfig(cc2sc(v.Type().Name())) || !viper.Sub(cc2sc(v.Type().Name())).InConfig(cc2sc(typeField.Name)) {
 				isWrite = true
 				b, _ := strconv.ParseBool(typeField.Tag.Get("default"))
 				viper.SetDefault(key, b)
@@ -93,14 +96,14 @@ func read(p interface{}) {
 		case reflect.Slice:
 			switch reflect.New(field.Type().Elem()).Elem().Type().Kind() {
 			case reflect.String:
-				if !viper.IsSet(key) {
+				if !viper.InConfig(cc2sc(v.Type().Name())) || !viper.Sub(cc2sc(v.Type().Name())).InConfig(cc2sc(typeField.Name)) {
 					isWrite = true
 					ss := strings.Split(typeField.Tag.Get("default"), ",")
 					viper.SetDefault(key, ss)
 				}
 				field.Set(reflect.ValueOf(viper.GetStringSlice(key)))
 			case reflect.Int:
-				if !viper.IsSet(key) {
+				if !viper.InConfig(cc2sc(v.Type().Name())) || !viper.Sub(cc2sc(v.Type().Name())).InConfig(cc2sc(typeField.Name)) {
 					isWrite = true
 					ss := strings.Split(typeField.Tag.Get("default"), ",")
 					is := make([]int, len(ss))
@@ -114,7 +117,15 @@ func read(p interface{}) {
 		}
 	}
 	if isWrite {
-		viper.WriteConfig()
+	rewrite:
+		i := 1
+		err := viper.WriteConfig()
+		if err != nil {
+			logrus.Error(err)
+			time.Sleep(time.Duration(i) * time.Second)
+			i *= 2
+			goto rewrite
+		}
 	}
 }
 
