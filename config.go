@@ -10,8 +10,6 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/sirupsen/logrus"
-
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -121,7 +119,6 @@ func read(p interface{}) {
 		i := 1
 		err := viper.WriteConfig()
 		if err != nil {
-			logrus.Error(err)
 			time.Sleep(time.Duration(i) * time.Second)
 			i *= 2
 			goto rewrite
