@@ -35,9 +35,9 @@ func init() {
 		viper.WriteConfigAs(*configPath + "/config.yml")
 	}
 	viper.WatchConfig()
-	viper.OnConfigChange(func(_ fsnotify.Event) {
+	viper.OnConfigChange(func(e fsnotify.Event) {
 		for _, p := range ps {
-			go read(p)
+			read(p)
 		}
 	})
 	AddConfig(&Log)
@@ -46,97 +46,84 @@ func init() {
 // 添加配置
 func AddConfig(p ...interface{}) {
 	for _, p := range p {
-		isSet(p)
 		read(p)
 	}
 	ps = append(ps, p...)
 }
 
-// 配置是否完整，不完整补充写入默认值
-func isSet(p interface{}) {
-	v := reflect.ValueOf(p).Elem()
-	for i := 0; i < v.NumField(); i++ {
-		typeField := v.Type().Field(i)
-		if !viper.IsSet(genKey(v.Type().Name(), typeField.Name)) {
-			setDefault(p)
-			viper.WriteConfig()
-			return
-		}
-	}
-}
-
-// 设置配置默认值
-func setDefault(p interface{}) {
-	v := reflect.ValueOf(p).Elem()
-	for i := 0; i < v.NumField(); i++ {
-		field := v.Field(i)
-		typeField := v.Type().Field(i)
-		switch typeField.Type.Kind() {
-		case reflect.String:
-			viper.SetDefault(genKey(v.Type().Name(), typeField.Name), typeField.Tag.Get("default"))
-		case reflect.Int:
-			i, _ := strconv.Atoi(typeField.Tag.Get("default"))
-			viper.SetDefault(genKey(v.Type().Name(), typeField.Name), i)
-		case reflect.Float64:
-			f, _ := strconv.ParseFloat(typeField.Tag.Get("default"), 64)
-			viper.SetDefault(genKey(v.Type().Name(), typeField.Name), f)
-		case reflect.Bool:
-			b, _ := strconv.ParseBool(typeField.Tag.Get("default"))
-			viper.SetDefault(genKey(v.Type().Name(), typeField.Name), b)
-		case reflect.Slice:
-			switch reflect.New(field.Type().Elem()).Elem().Type().Kind() {
-			case reflect.String:
-				ss := strings.Split(typeField.Tag.Get("default"), ",")
-				viper.SetDefault(genKey(v.Type().Name(), typeField.Name), ss)
-			case reflect.Int:
-				ss := strings.Split(typeField.Tag.Get("default"), ",")
-				is := make([]int, len(ss))
-				for i, s := range ss {
-					is[i], _ = strconv.Atoi(s)
-				}
-				viper.SetDefault(genKey(v.Type().Name(), typeField.Name), is)
-			}
-		}
-	}
-}
-
-// 读取配置
+// 读取配置，补充缺少的配置
 func read(p interface{}) {
+	isWrite := false
 	v := reflect.ValueOf(p).Elem()
 	for i := 0; i < v.NumField(); i++ {
 		field := v.Field(i)
 		typeField := v.Type().Field(i)
+		key := genKey(v.Type().Name(), typeField.Name)
 		switch typeField.Type.Kind() {
 		case reflect.String:
-			if strings.Contains(strings.ToLower(typeField.Name), "dir") {
-				field.SetString(createDir(viper.GetString(genKey(v.Type().Name(), typeField.Name))))
-			} else {
-				field.SetString(viper.GetString(genKey(v.Type().Name(), typeField.Name)))
+			if !viper.IsSet(key) {
+				isWrite = true
+				viper.SetDefault(key, typeField.Tag.Get("default"))
 			}
+			if strings.Contains(strings.ToLower(typeField.Name), "dir") {
+				createDir(viper.GetString(key))
+			}
+			field.SetString(viper.GetString(key))
 		case reflect.Int:
-			field.SetInt(viper.GetInt64(genKey(v.Type().Name(), typeField.Name)))
+			if !viper.IsSet(key) {
+				isWrite = true
+				i, _ := strconv.Atoi(typeField.Tag.Get("default"))
+				viper.SetDefault(key, i)
+			}
+			field.SetInt(viper.GetInt64(key))
 		case reflect.Float64:
-			field.SetFloat(viper.GetFloat64(genKey(v.Type().Name(), typeField.Name)))
+			if !viper.IsSet(key) {
+				isWrite = true
+				f, _ := strconv.ParseFloat(typeField.Tag.Get("default"), 64)
+				viper.SetDefault(key, f)
+			}
+			field.SetFloat(viper.GetFloat64(key))
 		case reflect.Bool:
-			field.SetBool(viper.GetBool(genKey(v.Type().Name(), typeField.Name)))
+			if !viper.IsSet(key) {
+				isWrite = true
+				b, _ := strconv.ParseBool(typeField.Tag.Get("default"))
+				viper.SetDefault(key, b)
+			}
+			field.SetBool(viper.GetBool(key))
 		case reflect.Slice:
 			switch reflect.New(field.Type().Elem()).Elem().Type().Kind() {
 			case reflect.String:
-				field.Set(reflect.ValueOf(viper.GetStringSlice(genKey(v.Type().Name(), typeField.Name))))
+				if !viper.IsSet(key) {
+					isWrite = true
+					ss := strings.Split(typeField.Tag.Get("default"), ",")
+					viper.SetDefault(key, ss)
+				}
+				field.Set(reflect.ValueOf(viper.GetStringSlice(key)))
 			case reflect.Int:
-				field.Set(reflect.ValueOf(viper.GetIntSlice(genKey(v.Type().Name(), typeField.Name))))
+				if !viper.IsSet(key) {
+					isWrite = true
+					ss := strings.Split(typeField.Tag.Get("default"), ",")
+					is := make([]int, len(ss))
+					for i, s := range ss {
+						is[i], _ = strconv.Atoi(s)
+					}
+					viper.SetDefault(key, is)
+				}
+				field.Set(reflect.ValueOf(viper.GetIntSlice(key)))
 			}
 		}
+	}
+	if isWrite {
+		viper.WriteConfig()
 	}
 }
 
 // 创建文件夹
-func createDir(path string) string {
+func createDir(path string) {
 	path, _ = filepath.Abs(path)
 	if _, err := os.Stat(path); err != nil {
 		os.Mkdir(path, os.ModePerm)
 	}
-	return path
 }
 
 // 生成 key
