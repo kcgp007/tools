@@ -112,6 +112,16 @@ func read(p interface{}) {
 				}
 				field.Set(reflect.ValueOf(viper.GetIntSlice(key)))
 			}
+		default:
+			switch typeField.Type.String() {
+			case "time.Duration":
+				if !viper.InConfig(cc2sc(v.Type().Name())) || !viper.Sub(cc2sc(v.Type().Name())).InConfig(cc2sc(typeField.Name)) {
+					isWrite = true
+					i, _ := strconv.Atoi(typeField.Tag.Get("default"))
+					viper.SetDefault(key, i)
+				}
+				field.Set(reflect.ValueOf(viper.GetDuration(key)))
+			}
 		}
 	}
 	if isWrite {
