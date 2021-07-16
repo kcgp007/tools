@@ -99,7 +99,7 @@ func setDefault(p interface{}) {
 	}
 }
 
-// 读取配置，补充缺少的配置
+// 读取配置
 func read(p interface{}) {
 	v := reflect.ValueOf(p).Elem()
 	for i := 0; i < v.NumField(); i++ {
@@ -108,7 +108,6 @@ func read(p interface{}) {
 		key := genKey(v.Type().Name(), typeField.Name)
 		switch typeField.Type.Kind() {
 		case reflect.String:
-
 			if strings.Contains(strings.ToLower(typeField.Name), "dir") {
 				createDir(viper.GetString(key))
 			}
