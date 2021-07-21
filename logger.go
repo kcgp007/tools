@@ -105,12 +105,13 @@ func (f *MyFormatter) levelText(entry *logrus.Entry) string {
 	}
 }
 
-// 日志来源
+// 日志文件来源
 func fileText(entry *logrus.Entry) string {
 	return fmt.Sprintf("%s:%v", entry.Caller.File, entry.Caller.Line)
 }
 
-// 日志内容
+// 日志方法来源
 func functionText(entry *logrus.Entry) string {
-	return entry.Caller.Function
+	functions := strings.Split(entry.Caller.Function, "/")
+	return functions[len(functions)-1]
 }
