@@ -73,7 +73,7 @@ func Done() {
 		if err := viper.WriteConfig(); err != nil {
 			fmt.Println(err)
 		}
-		fmt.Println("已补全config文件，请重启程序，输入任意键继续...")
+		fmt.Println("已补全config文件，请重启程序，输入任意键退出...")
 		fmt.Scanln()
 		*tools.IsCompletion = true
 		os.Exit(0)
