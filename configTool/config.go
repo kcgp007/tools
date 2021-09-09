@@ -1,4 +1,4 @@
-package tools
+package configTool
 
 import (
 	"fmt"
@@ -7,14 +7,14 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"tools"
+	"tools/appName"
 	"unicode"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
-
-var ps []interface{}
 
 type log struct {
 	Level  string `default:"info"`
@@ -24,18 +24,28 @@ type log struct {
 
 var Log log
 
-var configPath = pflag.StringP("configPath", "c", ".", "配置文件路径")
-
-var isWrite = false
+var ps = []interface{}{&Log}
 
 func init() {
 	pflag.Parse()
 	viper.SetConfigName("config")
-	viper.AddConfigPath(*configPath)
+	viper.AddConfigPath(*tools.ConfigPath)
 	if err := viper.ReadInConfig(); err != nil {
+		if *tools.IsCompletion {
+			return
+		}
 		fmt.Println(err)
-		isWrite = true
-		viper.WriteConfigAs(*configPath + "/config.yml")
+		fmt.Println("是否自动生成config文件[Y/N]")
+		var isY string
+		fmt.Scanln(&isY)
+		if isY == "y" || isY == "Y" {
+			*tools.IsCompletion = true
+			return
+		} else {
+			fmt.Println("请运行", appName.Get(), "--completion 补全config文件，输入任意键退出...")
+			fmt.Scanln()
+			os.Exit(0)
+		}
 	}
 	viper.WatchConfig()
 	viper.OnConfigChange(func(e fsnotify.Event) {
@@ -43,19 +53,35 @@ func init() {
 			read(p)
 		}
 	})
-	AddConfig(&Log)
 }
 
 // 添加配置
 func AddConfig(p ...interface{}) {
-	for _, p := range p {
-		if isWrite {
-			setDefault(p)
-			viper.WriteConfig()
-		}
-		read(p)
-	}
 	ps = append(ps, p...)
+}
+
+// 添加配置完成
+func Done() {
+	if *tools.IsCompletion {
+		if err := viper.WriteConfigAs(*tools.ConfigPath + "/config.yml"); err != nil {
+			fmt.Println(err)
+		}
+		for _, p := range ps {
+			setDefault(p)
+			read(p)
+		}
+		if err := viper.WriteConfig(); err != nil {
+			fmt.Println(err)
+		}
+		fmt.Println("已补全config文件，请重启程序，输入任意键继续...")
+		fmt.Scanln()
+		*tools.IsCompletion = true
+		os.Exit(0)
+	} else {
+		for _, p := range ps {
+			read(p)
+		}
+	}
 }
 
 // 设置配置默认值
