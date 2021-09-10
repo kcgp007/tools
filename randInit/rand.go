@@ -1,4 +1,4 @@
-package tools
+package randInit
 
 import (
 	crand "crypto/rand"

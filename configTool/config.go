@@ -7,8 +7,8 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
-	"tools"
 	"tools/appName"
+	"tools/flagInit"
 	"unicode"
 
 	"github.com/fsnotify/fsnotify"
@@ -29,9 +29,9 @@ var ps = []interface{}{&Log}
 func init() {
 	pflag.Parse()
 	viper.SetConfigName("config")
-	viper.AddConfigPath(*tools.ConfigPath)
+	viper.AddConfigPath(*flagInit.ConfigPath)
 	if err := viper.ReadInConfig(); err != nil {
-		if *tools.IsCompletion {
+		if *flagInit.IsCompletion {
 			return
 		}
 		fmt.Println(err)
@@ -39,7 +39,7 @@ func init() {
 		var isY string
 		fmt.Scanln(&isY)
 		if isY == "y" || isY == "Y" {
-			*tools.IsCompletion = true
+			*flagInit.IsCompletion = true
 			return
 		} else {
 			fmt.Println("请运行", appName.Get(), "--completion 补全config文件，输入任意键退出...")
@@ -62,8 +62,8 @@ func AddConfig(p ...interface{}) {
 
 // 添加配置完成
 func Done() {
-	if *tools.IsCompletion {
-		if err := viper.WriteConfigAs(*tools.ConfigPath + "/config.yml"); err != nil {
+	if *flagInit.IsCompletion {
+		if err := viper.WriteConfigAs(*flagInit.ConfigPath + "/config.yml"); err != nil {
 			fmt.Println(err)
 		}
 		for _, p := range ps {
@@ -75,7 +75,7 @@ func Done() {
 		}
 		fmt.Println("已补全config文件，请重启程序，输入任意键退出...")
 		fmt.Scanln()
-		*tools.IsCompletion = true
+		*flagInit.IsCompletion = true
 		os.Exit(0)
 	} else {
 		for _, p := range ps {

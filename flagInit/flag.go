@@ -1,4 +1,4 @@
-package tools
+package flagInit
 
 import (
 	"fmt"
