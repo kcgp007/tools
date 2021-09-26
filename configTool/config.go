@@ -7,7 +7,6 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
-	"tools/appName"
 	"tools/flagInit"
 	"unicode"
 
@@ -16,15 +15,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-type log struct {
-	Level  string `default:"info"`
-	MaxAge int    `default:"30"`
-	Dir    string `default:"log"`
-}
-
-var Log log
-
-var ps = []interface{}{&Log}
+var ps []interface{}
 
 func init() {
 	pflag.Parse()
@@ -35,17 +26,8 @@ func init() {
 			return
 		}
 		fmt.Println(err)
-		fmt.Println("是否自动生成config文件[Y/N]")
-		var isY string
-		fmt.Scanln(&isY)
-		if isY == "y" || isY == "Y" {
-			*flagInit.IsCompletion = true
-			return
-		} else {
-			fmt.Println("请运行", appName.Get(), "--completion 补全config文件，输入任意键退出...")
-			fmt.Scanln()
-			os.Exit(0)
-		}
+		*flagInit.IsCompletion = true
+		return
 	}
 	viper.WatchConfig()
 	viper.OnConfigChange(func(e fsnotify.Event) {
@@ -73,7 +55,7 @@ func Done() {
 		if err := viper.WriteConfig(); err != nil {
 			fmt.Println(err)
 		}
-		fmt.Println("已补全config文件，请重启程序，输入任意键退出...")
+		fmt.Println("已补全config文件，请重新启动程序，输入任意键退出...")
 		fmt.Scanln()
 		*flagInit.IsCompletion = true
 		os.Exit(0)
