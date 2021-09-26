@@ -17,6 +17,7 @@ var IsCompletion = pflag.BoolP("completion", "c", false, "补全config文件")
 // CGO_ENABLED=1 GOOS=linux GOARCH=amd64 CC=x86_64-linux-musl-gcc
 // CGO_ENABLED=1 GOOS=linux GOARCH=arm CC=arm-linux-gnueabihf-gcc
 // go build -trimpath -ldflags "-s -w -X tools.version=v1.2.3"
+// go build -ldflags="-H windowsgui"
 var version string
 
 // 帮助&版本
