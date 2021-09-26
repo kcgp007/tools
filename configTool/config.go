@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 	"tools/flagInit"
 	"unicode"
 
@@ -55,9 +56,11 @@ func Done() {
 		if err := viper.WriteConfig(); err != nil {
 			fmt.Println(err)
 		}
-		fmt.Println("已补全config文件，请重新启动程序，输入任意键退出...")
-		fmt.Scanln()
-		*flagInit.IsCompletion = true
+		ticker := time.NewTicker(1 * time.Second)
+		for i := 5; i >= 0; i-- {
+			<-ticker.C
+			fmt.Printf("\r已补全config文件，请重新启动程序，%v秒后将退出程序...", i)
+		}
 		os.Exit(0)
 	} else {
 		for _, p := range ps {
