@@ -14,20 +14,10 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type log struct {
-	Level  string `default:"info"`
-	MaxAge int    `default:"30"`
-	Dir    string `default:"log"`
-}
-
-var Log log
-
 func init() {
-	configTool.AddConfig(&Log)
-	configTool.Done()
 	// 配置输出格式
 	logrus.SetFormatter(&MyFormatter{true})
-	switch strings.ToLower(Log.Level) {
+	switch strings.ToLower(configTool.Log.Level) {
 	case "panic", "p":
 		logrus.SetLevel(logrus.PanicLevel)
 	case "fatal", "f":
@@ -47,10 +37,10 @@ func init() {
 	}
 	logrus.SetReportCaller(true)
 	// 获取配置文件中的日志文件路径
-	logPath := path.Join(Log.Dir, appName.Get())
+	logPath := path.Join(configTool.Log.Dir, appName.Get())
 	writer, err := rotatelogs.New(logPath+"_%Y%m%d.log",
 		rotatelogs.WithLinkName(logPath+"_link"),
-		rotatelogs.WithMaxAge(time.Duration(Log.MaxAge*24)*time.Hour),
+		rotatelogs.WithMaxAge(time.Duration(configTool.Log.MaxAge*24)*time.Hour),
 		rotatelogs.WithRotationTime(time.Duration(24)*time.Hour))
 	if err != nil {
 		logrus.Panic("init logger error:", err)

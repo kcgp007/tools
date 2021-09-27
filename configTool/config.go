@@ -16,7 +16,15 @@ import (
 	"github.com/spf13/viper"
 )
 
-var ps []interface{}
+type log struct {
+	Level  string `default:"info"`
+	MaxAge int    `default:"30"`
+	Dir    string `default:"log"`
+}
+
+var Log log
+
+var ps = []interface{}{&Log}
 
 func init() {
 	pflag.Parse()
