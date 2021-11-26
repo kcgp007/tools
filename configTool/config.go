@@ -17,9 +17,9 @@ import (
 )
 
 type log struct {
-	Level  string `default:"info"`
-	MaxAge int    `default:"30"`
-	Dir    string `default:"log"`
+	Level  string        `default:"info"`
+	MaxAge time.Duration `default:"30"`
+	Dir    string        `default:"log"`
 }
 
 var Log log
@@ -29,7 +29,7 @@ var ps = []interface{}{&Log}
 func init() {
 	pflag.Parse()
 	viper.SetConfigName("config")
-	viper.AddConfigPath(*flagInit.ConfigPath)
+	viper.AddConfigPath(".")
 	if err := viper.ReadInConfig(); err != nil {
 		if *flagInit.IsCompletion {
 			return
@@ -54,7 +54,7 @@ func AddConfig(p ...interface{}) {
 // 添加配置完成
 func Done() {
 	if *flagInit.IsCompletion {
-		if err := viper.WriteConfigAs(*flagInit.ConfigPath + "/config.yml"); err != nil {
+		if err := viper.WriteConfigAs("./config.yml"); err != nil {
 			fmt.Println(err)
 		}
 		for _, p := range ps {

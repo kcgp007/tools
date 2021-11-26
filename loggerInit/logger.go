@@ -2,10 +2,12 @@ package loggerInit
 
 import (
 	"fmt"
+	"io"
+	"log"
 	"path"
 	"strings"
 	"time"
-	"tools/appName"
+	"tools/app"
 	"tools/configTool"
 
 	"github.com/fatih/color"
@@ -13,6 +15,8 @@ import (
 	"github.com/rifflock/lfshook"
 	"github.com/sirupsen/logrus"
 )
+
+var Writer io.Writer
 
 func init() {
 	// 配置输出格式
@@ -37,22 +41,23 @@ func init() {
 	}
 	logrus.SetReportCaller(true)
 	// 获取配置文件中的日志文件路径
-	logPath := path.Join(configTool.Log.Dir, appName.Get())
-	writer, err := rotatelogs.New(logPath+"_%Y%m%d.log",
-		rotatelogs.WithLinkName(logPath+"_link"),
-		rotatelogs.WithMaxAge(time.Duration(configTool.Log.MaxAge*24)*time.Hour),
-		rotatelogs.WithRotationTime(time.Duration(24)*time.Hour))
+	logPath := path.Join(configTool.Log.Dir, app.Name())
+	var err error
+	Writer, err = rotatelogs.New(logPath+"_%Y%m%d.log",
+		rotatelogs.WithLinkName(logPath+".log"),
+		rotatelogs.WithMaxAge(configTool.Log.MaxAge*24*time.Hour),
+		rotatelogs.WithRotationTime(24*time.Hour))
 	if err != nil {
-		logrus.Panic("init logger error:", err)
+		log.Panic("init logger error:", err)
 	}
 	hook := lfshook.NewHook(lfshook.WriterMap{
-		logrus.TraceLevel: writer,
-		logrus.DebugLevel: writer,
-		logrus.InfoLevel:  writer,
-		logrus.WarnLevel:  writer,
-		logrus.ErrorLevel: writer,
-		logrus.FatalLevel: writer,
-		logrus.PanicLevel: writer,
+		logrus.TraceLevel: Writer,
+		logrus.DebugLevel: Writer,
+		logrus.InfoLevel:  Writer,
+		logrus.WarnLevel:  Writer,
+		logrus.ErrorLevel: Writer,
+		logrus.FatalLevel: Writer,
+		logrus.PanicLevel: Writer,
 	}, &MyFormatter{false})
 	logrus.AddHook(hook)
 }
