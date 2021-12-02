@@ -3,12 +3,12 @@ package ginTool
 import (
 	"io"
 	"os"
-	"tools/loggerTool"
+	"tools/loggerInit"
 
 	"github.com/gin-gonic/gin"
 )
 
 func init() {
 	gin.DisableConsoleColor()
-	gin.DefaultWriter = io.MultiWriter(os.Stdout, loggerTool.Writer)
+	gin.DefaultWriter = io.MultiWriter(os.Stdout, loggerInit.Writer)
 }

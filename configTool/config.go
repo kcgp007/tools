@@ -8,10 +8,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"tools/flagInit"
 	"unicode"
 
-	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
 )
 
@@ -21,8 +19,6 @@ type log struct {
 }
 
 var Log log
-
-var ps = []interface{}{&Log}
 
 func init() {
 	viper.SetConfigName("config")
@@ -34,117 +30,69 @@ func init() {
 			fmt.Println(err)
 		}
 	}
-	viper.WatchConfig()
-	viper.OnConfigChange(func(e fsnotify.Event) {
-		for _, p := range ps {
-			read(p)
-		}
-	})
+	Add(Log)
 }
 
 // 添加配置
-func AddConfig(p ...interface{}) {
-	ps = append(ps, p...)
-}
-
-// 添加配置完成
-func Done() {
-	if *flagInit.IsCompletion {
-		if err := viper.WriteConfigAs("./config.toml"); err != nil {
-			fmt.Println(err)
-		}
-		for _, p := range ps {
-			setDefault(p)
-			read(p)
-		}
-		if err := viper.WriteConfig(); err != nil {
-			fmt.Println(err)
-		}
-		ticker := time.NewTicker(1 * time.Second)
-		for i := 5; i >= 0; i-- {
-			<-ticker.C
-			fmt.Printf("\r已补全config文件，请重新启动程序，%v秒后将退出程序...", i)
-		}
-		os.Exit(0)
-	} else {
-		for _, p := range ps {
-			read(p)
-		}
+func Add(ps ...interface{}) {
+	for _, p := range ps {
+		config(p, nil)
 	}
+	viper.WriteConfig()
 }
 
-// 设置配置默认值
-func setDefault(p interface{}) {
+// 加载默认配置及配置文件数据
+func config(p interface{}, ss []string) {
 	v := reflect.ValueOf(p).Elem()
+	if ss == nil {
+		ss = append(ss, v.Type().Name())
+	}
 	for i := 0; i < v.NumField(); i++ {
 		field := v.Field(i)
 		typeField := v.Type().Field(i)
+		ss = append(ss, typeField.Name)
 		switch typeField.Type.Kind() {
+		case reflect.Struct:
+			config(field, ss)
 		case reflect.String:
-			viper.SetDefault(genKey(v.Type().Name(), typeField.Name), typeField.Tag.Get("default"))
+			viper.SetDefault(genKey(ss...), typeField.Tag.Get("default"))
+			if strings.Contains(strings.ToLower(typeField.Name), "dir") {
+				createDir(viper.GetString(genKey(ss...)))
+			}
+			field.SetString(viper.GetString(genKey(ss...)))
 		case reflect.Int:
 			i, _ := strconv.Atoi(typeField.Tag.Get("default"))
-			viper.SetDefault(genKey(v.Type().Name(), typeField.Name), i)
+			viper.SetDefault(genKey(ss...), i)
+			field.SetInt(viper.GetInt64(genKey(ss...)))
 		case reflect.Float64:
 			f, _ := strconv.ParseFloat(typeField.Tag.Get("default"), 64)
-			viper.SetDefault(genKey(v.Type().Name(), typeField.Name), f)
+			viper.SetDefault(genKey(ss...), f)
+			field.SetFloat(viper.GetFloat64(genKey(ss...)))
 		case reflect.Bool:
 			b, _ := strconv.ParseBool(typeField.Tag.Get("default"))
-			viper.SetDefault(genKey(v.Type().Name(), typeField.Name), b)
+			viper.SetDefault(genKey(ss...), b)
+			field.SetBool(viper.GetBool(genKey(ss...)))
 		case reflect.Slice:
 			switch reflect.New(field.Type().Elem()).Elem().Type().Kind() {
 			case reflect.String:
 				ss := strings.Split(typeField.Tag.Get("default"), ",")
-				viper.SetDefault(genKey(v.Type().Name(), typeField.Name), ss)
+				viper.SetDefault(genKey(ss...), ss)
+				field.Set(reflect.ValueOf(viper.GetStringSlice(genKey(ss...))))
 			case reflect.Int:
 				ss := strings.Split(typeField.Tag.Get("default"), ",")
 				is := make([]int, len(ss))
 				for i, s := range ss {
 					is[i], _ = strconv.Atoi(s)
 				}
-				viper.SetDefault(genKey(v.Type().Name(), typeField.Name), is)
+				viper.SetDefault(genKey(ss...), is)
+				field.Set(reflect.ValueOf(viper.GetIntSlice(genKey(ss...))))
 			}
 		default:
 			switch typeField.Type.String() {
 			case "time.Duration":
 				i, _ := strconv.Atoi(typeField.Tag.Get("default"))
-				viper.SetDefault(genKey(v.Type().Name(), typeField.Name), i)
-			}
-		}
-	}
-}
-
-// 读取配置
-func read(p interface{}) {
-	v := reflect.ValueOf(p).Elem()
-	for i := 0; i < v.NumField(); i++ {
-		field := v.Field(i)
-		typeField := v.Type().Field(i)
-		key := genKey(v.Type().Name(), typeField.Name)
-		switch typeField.Type.Kind() {
-		case reflect.String:
-			if strings.Contains(strings.ToLower(typeField.Name), "dir") {
-				createDir(viper.GetString(key))
-			}
-			field.SetString(viper.GetString(key))
-		case reflect.Int:
-			field.SetInt(viper.GetInt64(key))
-		case reflect.Float64:
-			field.SetFloat(viper.GetFloat64(key))
-		case reflect.Bool:
-			field.SetBool(viper.GetBool(key))
-		case reflect.Slice:
-			switch reflect.New(field.Type().Elem()).Elem().Type().Kind() {
-			case reflect.String:
-				field.Set(reflect.ValueOf(viper.GetStringSlice(key)))
-			case reflect.Int:
-				field.Set(reflect.ValueOf(viper.GetIntSlice(key)))
-			}
-
-		default:
-			switch typeField.Type.String() {
-			case "time.Duration":
-				field.Set(reflect.ValueOf(viper.GetDuration(key)))
+				viper.SetDefault(genKey(ss...), i)
+				field.Set(reflect.ValueOf(viper.GetDuration(genKey(ss...))))
 			}
 		}
 	}
