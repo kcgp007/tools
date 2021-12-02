@@ -12,14 +12,12 @@ import (
 	"unicode"
 
 	"github.com/fsnotify/fsnotify"
-	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
 
 type log struct {
 	Level  string        `default:"info"`
 	MaxAge time.Duration `default:"30"`
-	Dir    string        `default:"log"`
 }
 
 var Log log
@@ -27,16 +25,14 @@ var Log log
 var ps = []interface{}{&Log}
 
 func init() {
-	pflag.Parse()
 	viper.SetConfigName("config")
 	viper.AddConfigPath(".")
 	if err := viper.ReadInConfig(); err != nil {
-		if *flagInit.IsCompletion {
-			return
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			viper.WriteConfigAs("./config.toml")
+		} else {
+			fmt.Println(err)
 		}
-		fmt.Println(err)
-		*flagInit.IsCompletion = true
-		return
 	}
 	viper.WatchConfig()
 	viper.OnConfigChange(func(e fsnotify.Event) {
@@ -54,7 +50,7 @@ func AddConfig(p ...interface{}) {
 // 添加配置完成
 func Done() {
 	if *flagInit.IsCompletion {
-		if err := viper.WriteConfigAs("./config.yml"); err != nil {
+		if err := viper.WriteConfigAs("./config.toml"); err != nil {
 			fmt.Println(err)
 		}
 		for _, p := range ps {
@@ -144,6 +140,7 @@ func read(p interface{}) {
 			case reflect.Int:
 				field.Set(reflect.ValueOf(viper.GetIntSlice(key)))
 			}
+
 		default:
 			switch typeField.Type.String() {
 			case "time.Duration":

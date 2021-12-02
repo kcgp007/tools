@@ -1,4 +1,4 @@
-package loggerInit
+package loggerTool
 
 import (
 	"fmt"
@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 	"tools/app"
-	"tools/configTool"
 
 	"github.com/fatih/color"
 	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
@@ -18,10 +17,10 @@ import (
 
 var Writer io.Writer
 
-func init() {
+func Setting(level string, maxAge time.Duration) {
 	// 配置输出格式
 	logrus.SetFormatter(&MyFormatter{true})
-	switch strings.ToLower(configTool.Log.Level) {
+	switch strings.ToLower(level) {
 	case "panic", "p":
 		logrus.SetLevel(logrus.PanicLevel)
 	case "fatal", "f":
@@ -41,11 +40,11 @@ func init() {
 	}
 	logrus.SetReportCaller(true)
 	// 获取配置文件中的日志文件路径
-	logPath := path.Join(configTool.Log.Dir, app.Name())
+	logPath := path.Join("./log", app.Name())
 	var err error
 	Writer, err = rotatelogs.New(logPath+"_%Y%m%d.log",
 		rotatelogs.WithLinkName(logPath+".log"),
-		rotatelogs.WithMaxAge(configTool.Log.MaxAge*24*time.Hour),
+		rotatelogs.WithMaxAge(maxAge*24*time.Hour),
 		rotatelogs.WithRotationTime(24*time.Hour))
 	if err != nil {
 		log.Panic("init logger error:", err)

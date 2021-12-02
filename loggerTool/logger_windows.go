@@ -1,4 +1,4 @@
-package loggerInit
+package loggerTool
 
 import (
 	"syscall"
