@@ -30,7 +30,7 @@ func init() {
 			fmt.Println(err)
 		}
 	}
-	Add(Log)
+	Add(&Log)
 }
 
 // 添加配置
@@ -42,57 +42,57 @@ func Add(ps ...interface{}) {
 }
 
 // 加载默认配置及配置文件数据
-func config(p interface{}, ss []string) {
+func config(p interface{}, keys []string) {
 	v := reflect.ValueOf(p).Elem()
-	if ss == nil {
-		ss = append(ss, v.Type().Name())
+	if keys == nil {
+		keys = append(keys, v.Type().Name())
 	}
 	for i := 0; i < v.NumField(); i++ {
 		field := v.Field(i)
 		typeField := v.Type().Field(i)
-		ss = append(ss, typeField.Name)
+		tmpKeys := append(keys, typeField.Name)
 		switch typeField.Type.Kind() {
 		case reflect.Struct:
-			config(field, ss)
+			config(field, tmpKeys)
 		case reflect.String:
-			viper.SetDefault(genKey(ss...), typeField.Tag.Get("default"))
+			viper.SetDefault(genKey(tmpKeys...), typeField.Tag.Get("default"))
 			if strings.Contains(strings.ToLower(typeField.Name), "dir") {
-				createDir(viper.GetString(genKey(ss...)))
+				createDir(viper.GetString(genKey(tmpKeys...)))
 			}
-			field.SetString(viper.GetString(genKey(ss...)))
+			field.SetString(viper.GetString(genKey(tmpKeys...)))
 		case reflect.Int:
 			i, _ := strconv.Atoi(typeField.Tag.Get("default"))
-			viper.SetDefault(genKey(ss...), i)
-			field.SetInt(viper.GetInt64(genKey(ss...)))
+			viper.SetDefault(genKey(tmpKeys...), i)
+			field.SetInt(viper.GetInt64(genKey(tmpKeys...)))
 		case reflect.Float64:
 			f, _ := strconv.ParseFloat(typeField.Tag.Get("default"), 64)
-			viper.SetDefault(genKey(ss...), f)
-			field.SetFloat(viper.GetFloat64(genKey(ss...)))
+			viper.SetDefault(genKey(tmpKeys...), f)
+			field.SetFloat(viper.GetFloat64(genKey(tmpKeys...)))
 		case reflect.Bool:
 			b, _ := strconv.ParseBool(typeField.Tag.Get("default"))
-			viper.SetDefault(genKey(ss...), b)
-			field.SetBool(viper.GetBool(genKey(ss...)))
+			viper.SetDefault(genKey(tmpKeys...), b)
+			field.SetBool(viper.GetBool(genKey(tmpKeys...)))
 		case reflect.Slice:
 			switch reflect.New(field.Type().Elem()).Elem().Type().Kind() {
 			case reflect.String:
 				ss := strings.Split(typeField.Tag.Get("default"), ",")
-				viper.SetDefault(genKey(ss...), ss)
-				field.Set(reflect.ValueOf(viper.GetStringSlice(genKey(ss...))))
+				viper.SetDefault(genKey(tmpKeys...), ss)
+				field.Set(reflect.ValueOf(viper.GetStringSlice(genKey(tmpKeys...))))
 			case reflect.Int:
 				ss := strings.Split(typeField.Tag.Get("default"), ",")
 				is := make([]int, len(ss))
 				for i, s := range ss {
 					is[i], _ = strconv.Atoi(s)
 				}
-				viper.SetDefault(genKey(ss...), is)
-				field.Set(reflect.ValueOf(viper.GetIntSlice(genKey(ss...))))
+				viper.SetDefault(genKey(tmpKeys...), is)
+				field.Set(reflect.ValueOf(viper.GetIntSlice(genKey(tmpKeys...))))
 			}
 		default:
 			switch typeField.Type.String() {
 			case "time.Duration":
 				i, _ := strconv.Atoi(typeField.Tag.Get("default"))
-				viper.SetDefault(genKey(ss...), i)
-				field.Set(reflect.ValueOf(viper.GetDuration(genKey(ss...))))
+				viper.SetDefault(genKey(tmpKeys...), i)
+				field.Set(reflect.ValueOf(viper.GetDuration(genKey(tmpKeys...))))
 			}
 		}
 	}
@@ -107,9 +107,9 @@ func createDir(path string) {
 }
 
 // 生成 key
-func genKey(ss ...string) string {
+func genKey(keys ...string) string {
 	key := ""
-	for _, s := range ss {
+	for _, s := range keys {
 		key += "." + cc2sc(s)
 	}
 	return key[1:]
