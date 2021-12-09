@@ -1,10 +1,10 @@
-package loggerInit
+package loggerTool
 
 import (
 	"fmt"
 	"io"
 	"log"
-	"path"
+	"path/filepath"
 	"strings"
 	"time"
 	"tools/app"
@@ -18,7 +18,7 @@ import (
 
 var Writer io.Writer
 
-func init() {
+func Init(wd string) {
 	// 配置输出格式
 	logrus.SetFormatter(&MyFormatter{true})
 	switch strings.ToLower(configTool.Log.Level) {
@@ -41,14 +41,14 @@ func init() {
 	}
 	logrus.SetReportCaller(true)
 	// 获取配置文件中的日志文件路径
-	logPath := path.Join("./log", app.Name())
+	logPath := filepath.Join(wd, "log", app.Name())
 	var err error
 	Writer, err = rotatelogs.New(logPath+"_%Y%m%d.log",
 		rotatelogs.WithLinkName(logPath+".log"),
 		rotatelogs.WithMaxAge(configTool.Log.MaxAge*24*time.Hour),
 		rotatelogs.WithRotationTime(24*time.Hour))
 	if err != nil {
-		log.Panic("init logger error:", err)
+		log.Panicln("init logger error:", err)
 	}
 	hook := lfshook.NewHook(lfshook.WriterMap{
 		logrus.TraceLevel: Writer,

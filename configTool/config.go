@@ -20,12 +20,12 @@ type log struct {
 
 var Log log
 
-func init() {
+func Init(wd string) {
 	viper.SetConfigName("config")
-	viper.AddConfigPath(".")
+	viper.AddConfigPath(wd)
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			viper.WriteConfigAs("./config.toml")
+			viper.WriteConfigAs(filepath.Join(wd, "config.toml"))
 		} else {
 			fmt.Println(err)
 		}
