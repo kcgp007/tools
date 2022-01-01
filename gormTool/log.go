@@ -1,32 +1,57 @@
 package gormTool
 
 import (
-	"context"
+	"io"
+	"os"
+	"path/filepath"
+	"sync"
 	"time"
 
-	"github.com/sirupsen/logrus"
-	"gorm.io/gorm/logger"
+	"github.com/robfig/cron/v3"
 )
 
-type MyLogger struct{}
-
-func (MyLogger *MyLogger) LogMode(logger.LogLevel) logger.Interface {
-	return MyLogger
+type log struct {
+	IsGorm bool   `default:"true"`
+	Dir    string `default:"log"`
 }
 
-func (MyLogger *MyLogger) Info(_ context.Context, _ string, data ...interface{}) {
-	logrus.Info(data)
+var Log log
+
+type myWriter struct {
+	io.Writer
+	*os.File
+	*sync.RWMutex
 }
 
-func (MyLogger *MyLogger) Warn(_ context.Context, _ string, data ...interface{}) {
-	logrus.Warn(data)
+func (w *myWriter) Write(p []byte) (n int, err error) {
+	w.RLock()
+	defer w.RUnlock()
+	return w.Writer.Write(p)
 }
 
-func (MyLogger *MyLogger) Error(_ context.Context, _ string, data ...interface{}) {
-	logrus.Error(data)
+func (w myWriter) change(file *os.File) {
+	w.Lock()
+	defer w.Unlock()
+	if Log.IsGorm {
+		w.Writer = io.MultiWriter(os.Stdout, file)
+	} else {
+		w.Writer = io.MultiWriter(file)
+	}
+	w.File, file = file, w.File
+	file.Close()
 }
 
-func (MyLogger *MyLogger) Trace(_ context.Context, begin time.Time, fc func() (string, int64), _ error) {
-	sql, rows := fc()
-	logrus.Tracef("%v [%v] | %v", time.Since(begin), rows, sql)
+var mw = &myWriter{io.MultiWriter(os.Stdout), nil, new(sync.RWMutex)}
+
+func init() {
+	change()
+	c := cron.New()
+	c.AddFunc("@daily", change)
+	c.Start()
+}
+
+func change() {
+	os.Mkdir("log", 0777)
+	file, _ := os.OpenFile(filepath.Join(Log.Dir, time.Now().Format("gorm_20060102.log")), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0777)
+	mw.change(file)
 }

@@ -1,37 +1,15 @@
 package configTool
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
 	"strconv"
 	"strings"
-	"time"
 	"unicode"
 
 	"github.com/spf13/viper"
 )
-
-type log struct {
-	Level  string        `default:"info"`
-	MaxAge time.Duration `default:"30"`
-}
-
-var Log log
-
-func Init(wd string) {
-	viper.SetConfigName("config")
-	viper.AddConfigPath(wd)
-	if err := viper.ReadInConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			viper.WriteConfigAs(filepath.Join(wd, "config.toml"))
-		} else {
-			fmt.Println(err)
-		}
-	}
-	Add(&Log)
-}
 
 // 添加配置
 func Add(ps ...interface{}) {
@@ -55,9 +33,12 @@ func config(p interface{}, keys []string) {
 		case reflect.Struct:
 			config(field, tmpKeys)
 		case reflect.String:
-			viper.SetDefault(genKey(tmpKeys...), typeField.Tag.Get("default"))
 			if strings.Contains(strings.ToLower(typeField.Name), "dir") {
-				createDir(viper.GetString(genKey(tmpKeys...)))
+				abs, _ := filepath.Abs(typeField.Tag.Get("default"))
+				createDir(abs)
+				viper.SetDefault(genKey(tmpKeys...), abs)
+			} else {
+				viper.SetDefault(genKey(tmpKeys...), typeField.Tag.Get("default"))
 			}
 			field.SetString(viper.GetString(genKey(tmpKeys...)))
 		case reflect.Int:
