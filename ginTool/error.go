@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 )
 
 // 错误处理
@@ -25,7 +25,7 @@ func ErrorHandler(c *gin.Context) {
 func ExceptionHandler(c *gin.Context) {
 	defer func() {
 		if err := recover(); err != nil {
-			logrus.Error(err)
+			zap.S().Error(err)
 			c.String(http.StatusInternalServerError, fmt.Sprint(err))
 		}
 	}()

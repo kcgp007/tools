@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"sync"
 	"time"
+	"tools/configTool"
 
 	"github.com/gin-gonic/gin"
 	"github.com/robfig/cron/v3"
@@ -45,6 +46,7 @@ func (w myWriter) change(file *os.File) {
 var mw = &myWriter{io.MultiWriter(os.Stdout), nil, new(sync.RWMutex)}
 
 func init() {
+	configTool.Add(&Log)
 	gin.DisableConsoleColor()
 	gin.DefaultWriter = mw
 	change()

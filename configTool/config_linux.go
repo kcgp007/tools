@@ -16,5 +16,4 @@ func init() {
 			fmt.Println(err)
 		}
 	}
-	Add(&Log)
 }

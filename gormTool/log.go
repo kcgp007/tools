@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"sync"
 	"time"
+	"tools/configTool"
 
 	"github.com/robfig/cron/v3"
 )
@@ -44,6 +45,7 @@ func (w myWriter) change(file *os.File) {
 var mw = &myWriter{io.MultiWriter(os.Stdout), nil, new(sync.RWMutex)}
 
 func init() {
+	configTool.Add(&Log)
 	change()
 	c := cron.New()
 	c.AddFunc("@daily", change)

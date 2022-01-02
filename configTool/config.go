@@ -11,6 +11,8 @@ import (
 	"github.com/spf13/viper"
 )
 
+var IsAbs bool
+
 // 添加配置
 func Add(ps ...interface{}) {
 	for _, p := range ps {
@@ -34,9 +36,13 @@ func config(p interface{}, keys []string) {
 			config(field, tmpKeys)
 		case reflect.String:
 			if strings.Contains(strings.ToLower(typeField.Name), "dir") {
-				abs, _ := filepath.Abs(typeField.Tag.Get("default"))
-				createDir(abs)
-				viper.SetDefault(genKey(tmpKeys...), abs)
+				if IsAbs {
+					abs, _ := filepath.Abs(typeField.Tag.Get("default"))
+					viper.SetDefault(genKey(tmpKeys...), abs)
+				} else {
+					viper.SetDefault(genKey(tmpKeys...), typeField.Tag.Get("default"))
+				}
+				createDir(viper.GetString(genKey(tmpKeys...)))
 			} else {
 				viper.SetDefault(genKey(tmpKeys...), typeField.Tag.Get("default"))
 			}
