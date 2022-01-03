@@ -1,17 +1,31 @@
 package configTool
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
 	"strconv"
 	"strings"
+	"tools/execTool"
 	"unicode"
 
 	"github.com/spf13/viper"
 )
 
-var IsAbs bool
+var wd = execTool.ExecPath()
+
+func init() {
+	viper.SetConfigName("config")
+	viper.AddConfigPath(wd)
+	if err := viper.ReadInConfig(); err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			viper.WriteConfigAs(filepath.Join(wd, "config.toml"))
+		} else {
+			fmt.Println(err)
+		}
+	}
+}
 
 // 添加配置
 func Add(ps ...interface{}) {
@@ -36,12 +50,7 @@ func config(p interface{}, keys []string) {
 			config(field, tmpKeys)
 		case reflect.String:
 			if strings.Contains(strings.ToLower(typeField.Name), "dir") {
-				if IsAbs {
-					abs, _ := filepath.Abs(typeField.Tag.Get("default"))
-					viper.SetDefault(genKey(tmpKeys...), abs)
-				} else {
-					viper.SetDefault(genKey(tmpKeys...), typeField.Tag.Get("default"))
-				}
+				viper.Set(genKey(tmpKeys...), filepath.Join(wd, typeField.Tag.Get("default")))
 				createDir(viper.GetString(genKey(tmpKeys...)))
 			} else {
 				viper.SetDefault(genKey(tmpKeys...), typeField.Tag.Get("default"))

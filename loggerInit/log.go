@@ -5,7 +5,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"sync"
 	"time"
 	"tools/configTool"
 
@@ -21,32 +20,24 @@ type log struct {
 
 var Log log
 
-type myWriter struct {
-	io.Writer
-	*os.File
-	*sync.RWMutex
-}
-
-func (w *myWriter) Write(p []byte) (n int, err error) {
-	w.RLock()
-	defer w.RUnlock()
-	return w.Writer.Write(p)
-}
-
-func (w myWriter) change(file *os.File) {
-	w.Lock()
-	defer w.Unlock()
-	w.Writer = io.MultiWriter(os.Stdout, file)
-	w.File, file = file, w.File
-	file.Close()
-}
-
-var mw = &myWriter{io.MultiWriter(os.Stdout), nil, new(sync.RWMutex)}
+var (
+	tempLogger *zap.Logger
+	tempFile   *os.File
+)
 
 func init() {
 	configTool.Add(&Log)
+	change()
+	c := cron.New()
+	c.AddFunc("@daily", change)
+	c.Start()
+}
+
+func change() {
 	enc := zapcore.NewJSONEncoder(zap.NewDevelopmentEncoderConfig())
-	ws := zapcore.AddSync(mw)
+	os.Mkdir("log", os.ModePerm)
+	file, _ := os.OpenFile(filepath.Join(Log.Dir, time.Now().Format("20060102.log")), os.O_APPEND|os.O_CREATE|os.O_WRONLY, os.ModePerm)
+	ws := zapcore.AddSync(io.MultiWriter(file))
 	var enab zapcore.LevelEnabler
 	switch strings.ToLower(Log.Level) {
 	case "debug", "d":
@@ -66,14 +57,12 @@ func init() {
 	}
 	logger := zap.New(zapcore.NewCore(enc, ws, enab), zap.AddCaller())
 	zap.ReplaceGlobals(logger)
-	change()
-	c := cron.New()
-	c.AddFunc("@daily", change)
-	c.Start()
-}
 
-func change() {
-	os.Mkdir("log", os.ModePerm)
-	file, _ := os.OpenFile(filepath.Join(Log.Dir, time.Now().Format("20060102.log")), os.O_APPEND|os.O_CREATE|os.O_WRONLY, os.ModePerm)
-	mw.change(file)
+	if tempLogger != nil {
+		tempLogger.Sync()
+	}
+	if tempFile != nil {
+		tempFile.Close()
+	}
+	tempLogger, tempFile = logger, file
 }
