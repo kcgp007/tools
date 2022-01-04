@@ -7,20 +7,18 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
-	"tools/execTool"
+	"tools/pathTool"
 	"unicode"
 
 	"github.com/spf13/viper"
 )
 
-var wd = execTool.ExecPath()
-
 func init() {
 	viper.SetConfigName("config")
-	viper.AddConfigPath(wd)
+	viper.AddConfigPath(pathTool.SmartWd())
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			viper.WriteConfigAs(filepath.Join(wd, "config.toml"))
+			viper.WriteConfigAs(filepath.Join(pathTool.SmartWd(), "config.toml"))
 		} else {
 			fmt.Println(err)
 		}
@@ -50,12 +48,10 @@ func config(p interface{}, keys []string) {
 			config(field, tmpKeys)
 		case reflect.String:
 			if strings.Contains(strings.ToLower(typeField.Name), "dir") {
-				viper.Set(genKey(tmpKeys...), filepath.Join(wd, typeField.Tag.Get("default")))
 				createDir(viper.GetString(genKey(tmpKeys...)))
-			} else {
-				viper.SetDefault(genKey(tmpKeys...), typeField.Tag.Get("default"))
 			}
-			field.SetString(viper.GetString(genKey(tmpKeys...)))
+			viper.SetDefault(genKey(tmpKeys...), typeField.Tag.Get("default"))
+			field.SetString(pathTool.SmartAbs(viper.GetString(genKey(tmpKeys...))))
 		case reflect.Int:
 			i, _ := strconv.Atoi(typeField.Tag.Get("default"))
 			viper.SetDefault(genKey(tmpKeys...), i)
