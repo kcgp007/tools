@@ -4,8 +4,16 @@ GIT_COMMIT=$(shell git rev-parse HEAD)
 BUILD_TIME=$(shell date +"%Y-%m-%d %H:%M:%S")
 LDFLAGS=-s -w -X 'tools/flagTool.version=${VERSION}' -X 'tools/flagTool.goVersion=${GO_VERSION}' -X 'tools/flagTool.gitCommit=${GIT_COMMIT}' -X 'tools/flagTool.buildTime=${BUILD_TIME}'
 
+vet:
+	go vet ./...
+
+cover:
+	go test -coverprofile cover.out ./...
+	go tool cover -html=cover.out
+
 clean:
 	go clean -x
+	rm -f cover.out
 
 build:
 	go build -trimpath -ldflags "${LDFLAGS}"
