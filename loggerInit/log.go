@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
-	"tools/configTool"
 
+	"github.com/kcgp007/tools/configTool"
 	"github.com/robfig/cron/v3"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"

@@ -18,9 +18,6 @@ clean:
 	go clean -x
 	rm -f cover.out
 
-list:
-	go list ./...
-
 build:
 	go build -trimpath -ldflags "${LDFLAGS}"
 

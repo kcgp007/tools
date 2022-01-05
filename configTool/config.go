@@ -7,9 +7,9 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
-	"tools/pathTool"
 	"unicode"
 
+	"github.com/kcgp007/tools/pathTool"
 	"github.com/spf13/viper"
 )
 

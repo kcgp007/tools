@@ -6,9 +6,9 @@ import (
 	"path/filepath"
 	"sync"
 	"time"
-	"tools/configTool"
 
 	"github.com/gin-gonic/gin"
+	"github.com/kcgp007/tools/configTool"
 	"github.com/robfig/cron/v3"
 )
 
