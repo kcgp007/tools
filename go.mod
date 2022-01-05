@@ -1,4 +1,4 @@
-module tools
+module github.com/kcgp007/tools
 
 go 1.17
 
