@@ -37,7 +37,7 @@ func change() {
 	enc := zapcore.NewJSONEncoder(zap.NewDevelopmentEncoderConfig())
 	os.Mkdir("log", os.ModePerm)
 	file, _ := os.OpenFile(filepath.Join(Log.Dir, time.Now().Format("20060102.log")), os.O_APPEND|os.O_CREATE|os.O_WRONLY, os.ModePerm)
-	ws := zapcore.AddSync(io.MultiWriter(file))
+	ws := zapcore.AddSync(io.MultiWriter(file, os.Stdout))
 	var enab zapcore.LevelEnabler
 	switch strings.ToLower(Log.Level) {
 	case "debug", "d":
