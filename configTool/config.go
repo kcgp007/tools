@@ -92,7 +92,7 @@ func config(p interface{}, keys []string) {
 
 // 创建文件夹
 func createDir(path string) {
-	path, _ = filepath.Abs(path)
+	path = pathTool.SmartAbs(path)
 	if _, err := os.Stat(path); err != nil {
 		os.Mkdir(path, os.ModePerm)
 	}

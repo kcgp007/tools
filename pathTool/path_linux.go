@@ -5,14 +5,14 @@ import (
 	"path/filepath"
 )
 
+// linux正常获取工作目录路径
 func SmartWd() string {
 	wd, _ := os.Getwd()
 	return wd
 }
 
+// linux转为绝对路径
 func SmartAbs(path string) string {
-	if filepath.IsAbs(path) {
-		return path
-	}
-	return filepath.Join(SmartWd(), path)
+	abs, _ := filepath.Abs(path)
+	return abs
 }

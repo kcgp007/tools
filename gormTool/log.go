@@ -53,7 +53,7 @@ func init() {
 }
 
 func change() {
-	os.Mkdir("log", os.ModePerm)
+	os.Mkdir(Log.Dir, os.ModePerm)
 	file, _ := os.OpenFile(filepath.Join(Log.Dir, time.Now().Format("gorm_20060102.log")), os.O_APPEND|os.O_CREATE|os.O_WRONLY, os.ModePerm)
 	mw.change(file)
 }
