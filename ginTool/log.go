@@ -31,7 +31,7 @@ func (w *myWriter) Write(p []byte) (n int, err error) {
 	return w.Writer.Write(p)
 }
 
-func (w myWriter) change(file *os.File) {
+func (w *myWriter) change(file *os.File) {
 	w.Lock()
 	defer w.Unlock()
 	if Log.IsGin {

@@ -30,7 +30,7 @@ func (w *myWriter) Write(p []byte) (n int, err error) {
 	return w.Writer.Write(p)
 }
 
-func (w myWriter) change(file *os.File) {
+func (w *myWriter) change(file *os.File) {
 	w.Lock()
 	defer w.Unlock()
 	if Log.IsGorm {
@@ -42,7 +42,7 @@ func (w myWriter) change(file *os.File) {
 	file.Close()
 }
 
-var mw = &myWriter{io.MultiWriter(os.Stdout), nil, new(sync.RWMutex)}
+var MyWriter = &myWriter{io.MultiWriter(os.Stdout), nil, new(sync.RWMutex)}
 
 func init() {
 	configTool.Add(&Log)
@@ -55,5 +55,5 @@ func init() {
 func change() {
 	os.Mkdir(Log.Dir, os.ModePerm)
 	file, _ := os.OpenFile(filepath.Join(Log.Dir, time.Now().Format("gorm_20060102.log")), os.O_APPEND|os.O_CREATE|os.O_WRONLY, os.ModePerm)
-	mw.change(file)
+	MyWriter.change(file)
 }
