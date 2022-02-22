@@ -51,7 +51,7 @@ func config(p interface{}, keys []string) {
 				createDir(viper.GetString(genKey(tmpKeys...)))
 			}
 			viper.SetDefault(genKey(tmpKeys...), typeField.Tag.Get("default"))
-			field.SetString(pathTool.SmartAbs(viper.GetString(genKey(tmpKeys...))))
+			field.SetString(viper.GetString(genKey(tmpKeys...)))
 		case reflect.Int:
 			i, _ := strconv.Atoi(typeField.Tag.Get("default"))
 			viper.SetDefault(genKey(tmpKeys...), i)
