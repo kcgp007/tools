@@ -1,6 +1,6 @@
 module github.com/kcgp007/tools
 
-go 1.17
+go 1.18
 
 require (
 	github.com/gin-gonic/gin v1.7.7
@@ -8,8 +8,8 @@ require (
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.10.1
-	go.uber.org/zap v1.20.0
-	gorm.io/gorm v1.22.5
+	go.uber.org/zap v1.21.0
+	gorm.io/gorm v1.23.2
 )
 
 require (
