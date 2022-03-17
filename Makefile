@@ -12,6 +12,9 @@ list:
 
 install:
 	go mod tidy
+
+update:
+	go mod tidy
 	go get -u all
 
 cover:
