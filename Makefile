@@ -10,6 +10,10 @@ vet:
 list:
 	go list ./...
 
+install:
+	go mod tidy
+	go get -u all
+
 cover:
 	go test -coverprofile cover.out ./...
 	go tool cover -html=cover.out
