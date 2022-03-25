@@ -1,8 +1,8 @@
-VERSION=v1.2.3
 GO_VERSION=$(shell go version)
-GIT_COMMIT=$(shell git rev-parse HEAD)
+GIT_TAG=$(shell git describe --tag)
+GIT_BRANCH=$(shell git branch --show-current)
 BUILD_TIME=$(shell date +%FT%T%z)
-LDFLAGS=-s -w -X 'tools/flagTool.version=${VERSION}' -X 'tools/flagTool.goVersion=${GO_VERSION}' -X 'tools/flagTool.gitCommit=${GIT_COMMIT}' -X 'tools/flagTool.buildTime=${BUILD_TIME}'
+LDFLAGS=-s -w -X 'tools/flagTool.version=${GIT_TAG}_${GIT_BRANCH}' -X 'tools/flagTool.goVersion=${GO_VERSION}' -X 'tools/flagTool.buildTime=${BUILD_TIME}'
 
 vet:
 	go vet ./...
