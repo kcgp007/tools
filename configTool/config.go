@@ -3,22 +3,28 @@ package configTool
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"reflect"
+	"runtime"
 	"strconv"
 	"strings"
 	"unicode"
 
-	"github.com/kcgp007/tools/pathTool"
 	"github.com/spf13/viper"
 )
 
 func init() {
+	if runtime.GOOS == "windows" {
+		ed, _ := os.Executable()
+		wd, _ := os.Getwd()
+		if ed != wd {
+			os.Chdir(ed)
+		}
+	}
 	viper.SetConfigName("config")
-	viper.AddConfigPath(pathTool.SmartWd())
+	viper.AddConfigPath(".")
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			viper.WriteConfigAs(filepath.Join(pathTool.SmartWd(), "config.toml"))
+			viper.WriteConfigAs("config.toml")
 		} else {
 			fmt.Println(err)
 		}
@@ -92,7 +98,6 @@ func config(p interface{}, keys []string) {
 
 // 创建文件夹
 func createDir(path string) {
-	path = pathTool.SmartAbs(path)
 	if _, err := os.Stat(path); err != nil {
 		os.Mkdir(path, os.ModePerm)
 	}
