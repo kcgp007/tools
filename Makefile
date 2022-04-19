@@ -22,16 +22,6 @@ LDFLAGS=-s -w -X 'tools/flagTool.version=$(GIT_TAG)' -X 'tools/flagTool.goVersio
 vet:
 	go vet ./...
 
-list:
-	go list ./...
-
-install:
-	go mod tidy
-
-update:
-	go mod tidy
-	go get -u all
-
 cover:
 	go test -coverprofile cover.out ./...
 	go tool cover -html=cover.out
@@ -47,18 +37,18 @@ version:
 	@echo $(GO_VERSION)
 	@echo $(BUILD_TIME)
 
-build:
-ifneq ($(GIT_STATUS),)
-	@git status
-else
-	CGO_ENABLED=1 GOOS=linux GOARCH=amd64 CC=x86_64-linux-musl-gcc go build -o bin/ -trimpath -ldflags "$(LDFLAGS)"
-	CGO_ENABLED=1 GOOS=windows GOARCH=amd64 CC=x86_64-w64-mingw32-gcc go build -o bin/ -trimpath -ldflags "$(LDFLAGS)"
-endif
+#build:
+#ifneq ($(GIT_STATUS),)
+#	@git status
+#else
+#	CGO_ENABLED=1 GOOS=linux GOARCH=amd64 CC=x86_64-linux-musl-gcc go build -o bin/ -trimpath -ldflags "$(LDFLAGS)"
+#	CGO_ENABLED=1 GOOS=windows GOARCH=amd64 CC=x86_64-w64-mingw32-gcc go build -o bin/ -trimpath -ldflags "$(LDFLAGS)"
+#endif
 
-build:
-ifneq ($(GIT_STATUS),)
-	@git status
-else
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/ -trimpath -ldflags "$(LDFLAGS)"
-	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o bin/ -trimpath -ldflags "$(LDFLAGS)"
-endif
+#build:
+#ifneq ($(GIT_STATUS),)
+#	@git status
+#else
+#	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/ -trimpath -ldflags "$(LDFLAGS)"
+#	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o bin/ -trimpath -ldflags "$(LDFLAGS)"
+#endif
