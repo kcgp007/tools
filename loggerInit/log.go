@@ -29,9 +29,9 @@ var (
 func init() {
 	configTool.Add(&Log)
 	switch strings.ToLower(Log.Encoder) {
-	case "json", "j":
+	case "json":
 		enc = zapcore.NewJSONEncoder(zap.NewDevelopmentEncoderConfig())
-	case "console", "c":
+	case "text":
 		enc = zapcore.NewConsoleEncoder(zap.NewDevelopmentEncoderConfig())
 	default:
 		enc = zapcore.NewJSONEncoder(zap.NewDevelopmentEncoderConfig())
