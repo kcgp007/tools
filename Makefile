@@ -19,24 +19,6 @@ GO_VERSION=$(shell go version)
 BUILD_TIME=$(shell date +%FT%T%z)
 LDFLAGS=-s -w -X 'tools/flagTool.version=$(GIT_TAG)' -X 'tools/flagTool.goVersion=$(GO_VERSION)' -X 'tools/flagTool.buildTime=$(BUILD_TIME)'
 
-vet:
-	go vet ./...
-
-cover:
-	go test -coverprofile cover.out ./...
-	go tool cover -html=cover.out
-
-clean:
-	go clean -x
-	rm -f cover.out
-
-version:
-	@echo $(GIT_TAG)
-	@echo $(GIT_BRANCH)
-	@echo $(GIT_STATUS)
-	@echo $(GO_VERSION)
-	@echo $(BUILD_TIME)
-
 #build:
 #ifneq ($(GIT_STATUS),)
 #	@git status
@@ -52,3 +34,22 @@ version:
 #	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/ -trimpath -ldflags "$(LDFLAGS)"
 #	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o bin/ -trimpath -ldflags "$(LDFLAGS)"
 #endif
+
+vet:
+	go vet ./...
+
+cover:
+	go test -coverprofile cover.out ./...
+	go tool cover -html=cover.out
+
+clean:
+	go clean -x
+	rm -f cover.out
+	rm -rf bin
+
+version:
+	@echo $(GIT_TAG)
+	@echo $(GIT_BRANCH)
+	@echo $(GIT_STATUS)
+	@echo $(GO_VERSION)
+	@echo $(BUILD_TIME)
