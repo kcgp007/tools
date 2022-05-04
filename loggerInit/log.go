@@ -14,12 +14,16 @@ import (
 )
 
 type log struct {
-	Level   string `default:"info"`
-	Dir     string `default:"log"`
-	Encoder string `default:"json"`
+	Level   string
+	Dir     string
+	Encoder string
 }
 
-var Log log
+var Log = log{
+	Level:   "info",
+	Dir:     "log",
+	Encoder: "json",
+}
 
 var (
 	tempLogger *zap.Logger
