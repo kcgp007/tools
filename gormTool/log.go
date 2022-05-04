@@ -11,12 +11,15 @@ import (
 	"github.com/robfig/cron/v3"
 )
 
-type log struct {
-	IsGorm bool   `default:"true"`
-	Dir    string `default:"log"`
+type gormConfig struct {
+	Stdout bool
+	Dir    string
 }
 
-var Log log
+var config = gormConfig{
+	Stdout: true,
+	Dir:    "log",
+}
 
 type myWriter struct {
 	io.Writer
@@ -33,7 +36,7 @@ func (w *myWriter) Write(p []byte) (n int, err error) {
 func (w *myWriter) change(file *os.File) {
 	w.Lock()
 	defer w.Unlock()
-	if Log.IsGorm {
+	if config.Stdout {
 		w.Writer = io.MultiWriter(os.Stdout, file)
 	} else {
 		w.Writer = io.MultiWriter(file)
@@ -45,7 +48,7 @@ func (w *myWriter) change(file *os.File) {
 var MyWriter = &myWriter{io.MultiWriter(os.Stdout), nil, new(sync.RWMutex)}
 
 func init() {
-	configTool.Add(&Log)
+	configTool.AddWithKey("gorm", &config)
 	change()
 	c := cron.New()
 	c.AddFunc("@daily", change)
@@ -53,7 +56,7 @@ func init() {
 }
 
 func change() {
-	os.Mkdir(Log.Dir, os.ModePerm)
-	file, _ := os.OpenFile(filepath.Join(Log.Dir, time.Now().Format("gorm_20060102.log")), os.O_APPEND|os.O_CREATE|os.O_WRONLY, os.ModePerm)
+	os.Mkdir(config.Dir, os.ModePerm)
+	file, _ := os.OpenFile(filepath.Join(config.Dir, time.Now().Format("gorm_20060102.log")), os.O_APPEND|os.O_CREATE|os.O_WRONLY, os.ModePerm)
 	MyWriter.change(file)
 }
