@@ -1,23 +1,24 @@
 GIT_BRANCH=$(shell git branch --show-current)
+GIT_TAG=$(shell git describe --tags)
 ifneq ($(findstring $(GIT_BRANCH),master),)
-GIT_TAG=$(subst -,+,$(shell git describe --tags))
-else ifneq ($(findstring $(GIT_BRANCH),develop),)
-GIT_TAG=$(subst -,+,$(shell git describe --tags)).dev
-else ifneq ($(findstring $(GIT_BRANCH),feature),)
-GIT_TAG=$(subst -,+,$(shell git describe --tags)).dev
-else ifneq ($(findstring $(GIT_BRANCH),bugfix),)
-GIT_TAG=$(subst -,+,$(shell git describe --tags)).dev
-else ifneq ($(findstring $(GIT_BRANCH),release),)
-GIT_TAG=$(subst -,+,$(shell git describe --tags)).test
-else ifneq ($(findstring $(GIT_BRANCH),hotfix),)
-GIT_TAG=$(subst -,+,$(shell git describe --tags)).test
+GIT_VERSION=$(subst -,+,$(GIT_TAG))
+else ifneq ($(findstring develop,$(GIT_BRANCH)),)
+GIT_VERSION=$(subst -,+,$(GIT_TAG)).dev
+else ifneq ($(findstring feature,$(GIT_BRANCH)),)
+GIT_VERSION=$(subst -,+,$(GIT_TAG)).dev
+else ifneq ($(findstring bugfix,$(GIT_BRANCH)),)
+GIT_VERSION=$(subst -,+,$(GIT_TAG)).dev
+else ifneq ($(findstring release,$(GIT_BRANCH)),)
+GIT_VERSION=$(subst -,+,$(GIT_TAG)).$(subst release/,test.,$(GIT_BRANCH))
+else ifneq ($(findstring hotfix,$(GIT_BRANCH)),)
+GIT_VERSION=$(subst -,+,$(GIT_TAG)).fix
 else
-GIT_TAG=$(subst -,+,$(shell git describe --tags)).$(GIT_BRANCH)
+GIT_VERSION=$(subst -,+,$(GIT_TAG)).$(GIT_BRANCH)
 endif
 GIT_STATUS=$(shell git status --porcelain)
 GO_VERSION=$(shell go version)
 BUILD_TIME=$(shell date +%FT%T%z)
-LDFLAGS=-s -w -X 'tools/flagTool.version=$(GIT_TAG)' -X 'tools/flagTool.goVersion=$(GO_VERSION)' -X 'tools/flagTool.buildTime=$(BUILD_TIME)'
+LDFLAGS=-s -w -X 'tools/flagTool.version=$(GIT_VERSION)' -X 'tools/flagTool.goVersion=$(GO_VERSION)' -X 'tools/flagTool.buildTime=$(BUILD_TIME)'
 
 #build:
 #ifneq ($(GIT_STATUS),)
@@ -47,8 +48,9 @@ clean:
 	rm -f cover.out
 	rm -rf bin
 
-version:
+test:
 	@echo $(GIT_TAG)
+	@echo $(GIT_VERSION)
 	@echo $(GIT_BRANCH)
 	@echo $(GIT_STATUS)
 	@echo $(GO_VERSION)
