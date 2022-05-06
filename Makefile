@@ -1,19 +1,19 @@
 GIT_BRANCH=$(shell git branch --show-current)
 GIT_TAG=$(shell git describe --tags)
 ifneq ($(findstring $(GIT_BRANCH),master),)
-GIT_VERSION=$(subst -,+,$(GIT_TAG))
+GIT_VERSION=$(GIT_TAG)
 else ifneq ($(findstring develop,$(GIT_BRANCH)),)
-GIT_VERSION=$(subst -,+,$(GIT_TAG)).dev
+GIT_VERSION=$(GIT_TAG).dev
 else ifneq ($(findstring feature,$(GIT_BRANCH)),)
-GIT_VERSION=$(subst -,+,$(GIT_TAG)).dev
+GIT_VERSION=$(GIT_TAG).dev
 else ifneq ($(findstring bugfix,$(GIT_BRANCH)),)
-GIT_VERSION=$(subst -,+,$(GIT_TAG)).dev
+GIT_VERSION=$(GIT_TAG).dev
 else ifneq ($(findstring release,$(GIT_BRANCH)),)
-GIT_VERSION=$(subst -,+,$(GIT_TAG)).$(subst release/,test.,$(GIT_BRANCH))
+GIT_VERSION=$(GIT_TAG).$(subst release/,test.,$(GIT_BRANCH))
 else ifneq ($(findstring hotfix,$(GIT_BRANCH)),)
-GIT_VERSION=$(subst -,+,$(GIT_TAG)).fix
+GIT_VERSION=$(GIT_TAG).fix
 else
-GIT_VERSION=$(subst -,+,$(GIT_TAG)).$(GIT_BRANCH)
+GIT_VERSION=$(GIT_TAG).$(GIT_BRANCH)
 endif
 GIT_STATUS=$(shell git status --porcelain)
 GO_VERSION=$(shell go version)
