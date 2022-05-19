@@ -31,7 +31,6 @@ func init() {
 
 // 加载默认配置及配置文件数据
 func Add(c any) {
-	fmt.Println(reflect.TypeOf(c).Elem().Name())
 	AddWithKey(reflect.TypeOf(c).Elem().Name(), c)
 }
 
