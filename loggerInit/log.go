@@ -22,7 +22,7 @@ type log struct {
 var Log = log{
 	Level:   "info",
 	Dir:     "log",
-	Encoder: "json",
+	Encoder: "text",
 }
 
 var (
