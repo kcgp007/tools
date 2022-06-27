@@ -18,7 +18,7 @@ endif
 GIT_STATUS=$(shell git status --porcelain)
 GO_VERSION=$(shell go version)
 BUILD_TIME=$(shell date +%FT%T%z)
-LDFLAGS=-s -w -X 'tools/flagTool.version=$(GIT_VERSION)' -X 'tools/flagTool.goVersion=$(GO_VERSION)' -X 'tools/flagTool.buildTime=$(BUILD_TIME)'
+LDFLAGS=-s -w -X 'github.com/kcgp007/tools/flagTool.version=$(GIT_VERSION)' -X 'github.com/kcgp007/tools/flagTool.goVersion=$(GO_VERSION)' -X 'github.com/kcgp007/tools/flagTool.buildTime=$(BUILD_TIME)'
 
 #build:
 #ifneq ($(GIT_STATUS),)
