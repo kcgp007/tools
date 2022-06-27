@@ -24,5 +24,5 @@ func Test_gin(t *testing.T) {
 		s := ""
 		c.String(http.StatusOK, s[:5])
 	})
-	t.Log(router.Run(":8080"))
+	//t.Log(router.Run(":8080"))
 }
