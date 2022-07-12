@@ -13,7 +13,7 @@ GIT_VERSION=$(GIT_TAG).test
 else ifneq ($(findstring hotfix,$(GIT_BRANCH)),)
 GIT_VERSION=$(GIT_TAG).fix
 else
-GIT_VERSION=$(GIT_TAG).$(GIT_BRANCH)
+GIT_VERSION=$(GIT_TAG)
 endif
 GIT_STATUS=$(shell git status --porcelain)
 GO_VERSION=$(shell go version)
