@@ -13,27 +13,27 @@ GIT_VERSION=$(GIT_TAG).test
 else ifneq ($(findstring hotfix,$(GIT_BRANCH)),)
 GIT_VERSION=$(GIT_TAG).fix
 else
-GIT_VERSION=$(GIT_TAG).$(GIT_BRANCH)
+GIT_VERSION=$(GIT_TAG)
 endif
 GIT_STATUS=$(shell git status --porcelain)
 GO_VERSION=$(shell go version)
 BUILD_TIME=$(shell date +%FT%T%z)
-LDFLAGS=-s -w -X 'tools/flagTool.version=$(GIT_VERSION)' -X 'tools/flagTool.goVersion=$(GO_VERSION)' -X 'tools/flagTool.buildTime=$(BUILD_TIME)'
+LDFLAGS=-s -w -X 'github.com/kcgp007/tools/flagTool.version=$(GIT_VERSION)' -X 'github.com/kcgp007/tools/flagTool.goVersion=$(GO_VERSION)' -X 'github.com/kcgp007/tools/flagTool.buildTime=$(BUILD_TIME)'
 
 #build:
 #ifneq ($(GIT_STATUS),)
 #	@git status
 #else
-#	CGO_ENABLED=1 GOOS=linux GOARCH=amd64 CC=x86_64-linux-musl-gcc go build -o bin/ -trimpath -ldflags "$(LDFLAGS)"
-#	CGO_ENABLED=1 GOOS=windows GOARCH=amd64 CC=x86_64-w64-mingw32-gcc go build -o bin/ -trimpath -ldflags "$(LDFLAGS)"
+#	CGO_ENABLED=1 GOOS=linux GOARCH=amd64 CC=x86_64-linux-musl-gcc go build -trimpath -ldflags "$(LDFLAGS)"
+#	CGO_ENABLED=1 GOOS=windows GOARCH=amd64 CC=x86_64-w64-mingw32-gcc go build -trimpath -ldflags "$(LDFLAGS)"
 #endif
 
 #build:
 #ifneq ($(GIT_STATUS),)
 #	@git status
 #else
-#	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/ -trimpath -ldflags "$(LDFLAGS)"
-#	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o bin/ -trimpath -ldflags "$(LDFLAGS)"
+#	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags "$(LDFLAGS)"
+#	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -trimpath -ldflags "$(LDFLAGS)"
 #endif
 
 vet:
@@ -46,7 +46,6 @@ cover:
 clean:
 	go clean -x
 	rm -f cover.out
-	rm -rf bin
 
 test:
 	@echo $(GIT_TAG)
