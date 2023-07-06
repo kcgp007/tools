@@ -1,7 +1,6 @@
 name: Go
 on:
-  push:
-    branches: [ master ]
+  push
 jobs:
   build:
     runs-on: ubuntu-latest
