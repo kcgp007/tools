@@ -1,6 +1,6 @@
 # tools
 
-[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/kcgp007/tools/Go?logo=github)](https://github.com/kcgp007/tools/actions/workflows/go.yml)
+[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/kcgp007/tools/go.yml?logo=github)](https://github.com/kcgp007/tools/actions/workflows/go.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/kcgp007/tools)](https://goreportcard.com/report/github.com/kcgp007/tools)
 ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/kcgp007/tools)
 ![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/kcgp007/tools)
